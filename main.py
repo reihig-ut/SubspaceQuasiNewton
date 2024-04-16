@@ -6,8 +6,12 @@ import numpy as np
 from environments import *
 from numerical_experiment import get_objects_from_config
 from utils.logger import logger
-from utils.save_func import (get_path_form_params, load_config, plot_results,
-                             save_result_json)
+from utils.save_func import (
+    get_path_form_params,
+    load_config,
+    plot_results,
+    save_result_json,
+)
 
 PROXIMAL_METHODS = [PROXIMAL_GRADIENT_DESCENT, ACCELERATED_PROXIMAL_GRADIENT_DESCENT]
 QUASI_NEWTONS = [BFGS_QUASI_NEWTON, RANDOM_BFGS, SUBSPACE_QUASI_NEWTON]

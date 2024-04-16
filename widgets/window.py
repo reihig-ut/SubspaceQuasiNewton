@@ -3,8 +3,10 @@ import tkinter as tk
 import tkinter.ttk as ttk
 
 from environments import RESULTPATH
-from problems.generate_problem import (constraints_properties_key,
-                                       objective_properties_key)
+from problems.generate_problem import (
+    constraints_properties_key,
+    objective_properties_key,
+)
 from utils.save_func import get_params_from_path, get_path_form_params
 from widgets.option import open_option_window
 from widgets.path_func import get_best_result_path, show_result_with_option

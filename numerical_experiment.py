@@ -1,10 +1,12 @@
 from algorithms.solver import get_solver
 from environments import DTYPE, NOCONSTRAINTS, REGULARIZED
-from problems.generate_problem import (constraints_properties_key,
-                                       generate_constraints,
-                                       generate_initial_points,
-                                       generate_objective,
-                                       objective_properties_key)
+from problems.generate_problem import (
+    constraints_properties_key,
+    generate_constraints,
+    generate_initial_points,
+    generate_objective,
+    objective_properties_key,
+)
 from utils.calculate import identity_prox
 
 

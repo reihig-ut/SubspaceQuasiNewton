@@ -29,16 +29,19 @@ def conv2d(input, weight, bias=None, stride=1, padding=0, dilation=1, groups=1):
             batch_group_count=groups,
         )
     else:
-        return conv_general_dilated(
-            lhs=input,
-            rhs=weight,
-            window_strides=(stride, stride),
-            padding=[(padding, padding), (padding, padding)],
-            lhs_dilation=(dilation, dilation),
-            rhs_dilation=(dilation, dilation),
-            feature_group_count=groups,
-            batch_group_count=groups,
-        ) + reshape(bias, (1, bias.size, 1, 1))
+        return (
+            conv_general_dilated(
+                lhs=input,
+                rhs=weight,
+                window_strides=(stride, stride),
+                padding=[(padding, padding), (padding, padding)],
+                lhs_dilation=(dilation, dilation),
+                rhs_dilation=(dilation, dilation),
+                feature_group_count=groups,
+                batch_group_count=groups,
+            )
+            + reshape(bias, (1, bias.size, 1, 1))
+        )
 
 
 def avg_pool2d(input, kernel_size, stride=None, padding=0):

@@ -4,8 +4,10 @@ import jax.numpy as jnp
 import numpy as np
 from jax.lax import transpose
 
-from algorithms.descent_method import (BacktrackingAcceleratedProximalGD,
-                                       optimization_solver)
+from algorithms.descent_method import (
+    BacktrackingAcceleratedProximalGD,
+    optimization_solver,
+)
 from utils.calculate import nonnegative_projection
 from utils.logger import logger
 

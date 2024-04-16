@@ -4,8 +4,7 @@ import jax.numpy as jnp
 import numpy as np
 
 from algorithms.descent_method import optimization_solver
-from utils.calculate import (clipping_eigenvalues, jax_randn,
-                             subspace_line_search)
+from utils.calculate import clipping_eigenvalues, jax_randn, subspace_line_search
 
 
 class SubspaceQNM(optimization_solver):

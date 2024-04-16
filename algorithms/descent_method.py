@@ -7,11 +7,16 @@ from jax import grad, jit
 from jax.lax import transpose
 from jax.numpy import float64
 
-from environments import (DIRECTIONALDERIVATIVE, FINITEDIFFERENCE,
-                          LEESELECTION, RANDOM)
-from utils.calculate import (get_hessian_with_hvp, get_jvp,
-                             get_minimum_eigenvalue, hessian, jax_randn,
-                             line_search, subspace_line_search)
+from environments import DIRECTIONALDERIVATIVE, FINITEDIFFERENCE, LEESELECTION, RANDOM
+from utils.calculate import (
+    get_hessian_with_hvp,
+    get_jvp,
+    get_minimum_eigenvalue,
+    hessian,
+    jax_randn,
+    line_search,
+    subspace_line_search,
+)
 from utils.logger import logger
 
 

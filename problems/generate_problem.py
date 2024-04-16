@@ -9,9 +9,15 @@ from sklearn.datasets import load_svmlight_file
 from environments import *
 from problems.constraints import *
 from problems.objectives import *
-from utils.calculate import (BallProjection, BoxProjection, L1projection,
-                             generate_semidefinite, generate_symmetric,
-                             jax_randn, nonnegative_projection)
+from utils.calculate import (
+    BallProjection,
+    BoxProjection,
+    L1projection,
+    generate_semidefinite,
+    generate_symmetric,
+    jax_randn,
+    nonnegative_projection,
+)
 from utils.select import get_activation, get_criterion
 
 objective_properties_key = {
