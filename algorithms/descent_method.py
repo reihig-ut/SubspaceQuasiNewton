@@ -842,3 +842,66 @@ class SubspaceRNM(optimization_solver):
         # (dim,reduced_dim)の行列を生成
         if mode == "random":
             return jax_randn(reduced_dim, dim, dtype=self.dtype) / (reduced_dim ** 0.5)
+
+
+class SubspaceTRM(optimization_solver):
+    def _solve_subproblem(
+        self, g_sub: jnp.ndarray, H_sub: jnp.ndarray, delta: float, n: int
+    ) -> jnp.ndarray:
+        F = jnp.block(
+            [
+                [H_sub, g_sub.reshape(-1, 1)],
+                [g_sub.reshape(1, -1), jnp.array([[-delta]])],
+            ]
+        )
+        vec_min = jnp.linalg.eigh(F)[1][:, 0]
+        return vec_min
+
+    def __iter_per__(self):
+        reduced_dim = self.params["reduced_dim"]
+        dim = self.xk.shape[0]
+        P = self.generate_matrix(dim, reduced_dim)
+        H_sub = self.subspace_second_order_oracle(self.xk, P)
+        g_sub = self.subspace_first_order_oracle(self.xk, P)
+
+        if self.check_norm(grad, self.params["eps"]):
+            self.finish = True
+            return
+
+        # solve subproblem
+        subprob_sol = self._solve_subproblem(g_sub, H_sub, self.params["delta"], dim)
+        v_sub = subprob_sol[:-1]
+        t = subprob_sol[-1]
+
+        # compute direction
+        if abs(t) >= self.params["nu"]:
+            d_sub = v_sub / t
+            d = jnp.dot(P.T, d_sub)
+        else:
+            sign = 1 if -jnp.dot(g_sub, v_sub) > 0 else -1
+            d_sub = sign * v_sub
+            d = jnp.dot(P.T, d_sub)
+
+        # update
+        norm_d = jnp.linalg.norm(d)
+        if norm_d > self.params["Delta"]:
+            eta = self.__step_size__(g_sub, d, d_sub)
+            self.__update__(eta * d)
+        else:
+            self.__update__(d)
+
+    def __step_size__(self, g_sub, d, d_sub):
+        alpha = self.params["alpha"]
+        beta = self.params["beta"]
+
+        # line search
+        f_k = self.f(self.xk)
+        stepsize = 1.0
+        while f_k - self.f(self.xk + stepsize * d) < -alpha * stepsize * g_sub @ d_sub:
+            stepsize *= beta
+            if stepsize < 1e-12:
+                return 0
+        return stepsize
+
+    def generate_matrix(self, dim, reduced_dim):
+        return jax_randn(reduced_dim, dim, dtype=self.dtype) / (reduced_dim ** 0.5)
