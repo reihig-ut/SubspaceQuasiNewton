@@ -1,6 +1,6 @@
-from jax import random
 import jax.numpy as jnp
-from jax import config
+from jax import config, random
+
 config.update("jax_enable_x64", True)
 key = random.PRNGKey(0)
 DATAPATH = "./data"
@@ -38,7 +38,7 @@ LIMITED_MEMORY_NEWTON = "LMN"
 LIMITED_MEMORY_BFGS = "LM_BFGS"
 BFGS_QUASI_NEWTON = "bfgs"
 RANDOM_BFGS = "Randomized_bfgs"
-SUBSPACE_REGULARIZED_NEWTON = "RSRNM" 
+SUBSPACE_REGULARIZED_NEWTON = "RSRNM"
 SUBSPACE_QUASI_NEWTON = "Proposed"
 PROXIMAL_GRADIENT_DESCENT = "PGD"
 ACCELERATED_PROXIMAL_GRADIENT_DESCENT = "APGD"
@@ -48,7 +48,7 @@ DYNAMIC_BARRIER = "Dynamic"
 PRIMALDUAL = "PrimalDual"
 
 
-# ディレクトリ名の形式 
+# ディレクトリ名の形式
 # results/{objectives}/{param}@{value}~{param}@{value}~..../{constraints}/{param}@{value}~{param}@{value}~..../{solver_name}/{param}@{value}~{param}@{value}
 
 DISTINCT_PARAM_VALUE = "@"

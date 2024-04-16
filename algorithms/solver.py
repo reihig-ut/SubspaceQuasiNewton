@@ -1,9 +1,10 @@
-from algorithms.descent_method import *
 from algorithms.constrained_descent_method import *
+from algorithms.descent_method import *
 from algorithms.proposed_method import *
 from environments import *
 
-def get_solver(solver_name,dtype):
+
+def get_solver(solver_name, dtype):
     if solver_name == GRADIENT_DESCENT:
         solver = GradientDescent(dtype=dtype)
     elif solver_name == SUBSPACE_GRADIENT_DESCENT:
@@ -11,7 +12,7 @@ def get_solver(solver_name,dtype):
     elif solver_name == ACCELERATED_GRADIENT_DESCENT:
         solver = AcceleratedGD(dtype=dtype)
     elif solver_name == MARUMO_AGD:
-        solver = AcceleratedGDRestart(dtype = dtype)
+        solver = AcceleratedGDRestart(dtype=dtype)
     elif solver_name == NEWTON:
         solver = NewtonMethod(dtype=dtype)
     elif solver_name == SUBSPACE_NEWTON:
@@ -21,7 +22,7 @@ def get_solver(solver_name,dtype):
     elif solver_name == SUBSPACE_REGULARIZED_NEWTON:
         solver = SubspaceRNM(dtype=dtype)
     elif solver_name == LIMITED_MEMORY_BFGS:
-        solver = LimitedMemoryBFGS(dtype = dtype)
+        solver = LimitedMemoryBFGS(dtype=dtype)
     elif solver_name == PROXIMAL_GRADIENT_DESCENT:
         solver = BacktrackingProximalGD(dtype=dtype)
     elif solver_name == ACCELERATED_PROXIMAL_GRADIENT_DESCENT:
@@ -41,4 +42,3 @@ def get_solver(solver_name,dtype):
     else:
         raise ValueError(f"{solver_name} is not implemented.")
     return solver
-    
