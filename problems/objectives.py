@@ -128,7 +128,7 @@ class MLPNet(Objective):
     def __init__(self, params, criterion, activation):
         # params: [X,y,[(input_size,output_size,bias_flag_i)]]
         super().__init__(params)
-        self.layer_size = params[1]
+        self.layer_size = params[2]
         self.criterion = criterion
         self.activate = activation
 
