@@ -168,3 +168,6 @@ scheduler_cancel.py
 outputs/
 test.py
 nogithub/
+
+.vscode
+notebooks/
