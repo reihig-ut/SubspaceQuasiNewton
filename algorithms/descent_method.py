@@ -845,6 +845,19 @@ class SubspaceRNM(optimization_solver):
 
 
 class SubspaceTRM(optimization_solver):
+    def __init__(self, dtype=jnp.float64) -> None:
+        super().__init__(dtype)
+        self.params_key = [
+            "reduced_dim",
+            "delta",
+            "Delta",
+            "nu",
+            "alpha",
+            "beta",
+            "eps",
+            "backward",
+        ]
+
     def _solve_subproblem(
         self, g_sub: jnp.ndarray, H_sub: jnp.ndarray, delta: float, n: int
     ) -> jnp.ndarray:
