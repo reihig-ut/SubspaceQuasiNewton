@@ -41,7 +41,7 @@ def run_numerical_experiment(config):
     ) = get_objects_from_config(config)
     f.set_type(DTYPE)
     x0 = x0.astype(DTYPE)
-    logger.info(f"dimensiton:{f.get_dimension()}")
+    logger.info(f"dimension:{f.get_dimension()}")
 
     solver_dir = get_path_form_params(solver_params)
     func_dir = get_path_form_params(function_properties)
