@@ -39,6 +39,8 @@ def get_solver(solver_name, dtype):
         solver = RandomizedBFGS(dtype)
     elif solver_name == SUBSPACE_QUASI_NEWTON:
         solver = SubspaceQNM(dtype)
+    elif solver_name == SUBSPACE_TRUST_REGION:
+        solver = SubspaceTRM(dtype)
     else:
         raise ValueError(f"{solver_name} is not implemented.")
     return solver
