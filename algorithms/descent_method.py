@@ -112,7 +112,9 @@ class optimization_solver:
 
     def __check_params__(self, params):
         all_params = True
-        assert len(self.params_key) == len(params), "不要,または足りないparamがあります."
+        assert len(self.params_key) == len(
+            params
+        ), "不要,または足りないparamがあります."
         for param_key in self.params_key:
             if param_key in params:
                 continue
@@ -240,7 +242,7 @@ class SubspaceGD(optimization_solver):
     def generate_matrix(self, dim, reduced_dim, mode):
         # (dim,reduced_dim)の行列を生成
         if mode == "random":
-            return jax_randn(reduced_dim, dim, dtype=self.dtype) / (reduced_dim ** 0.5)
+            return jax_randn(reduced_dim, dim, dtype=self.dtype) / (reduced_dim**0.5)
         elif mode == "identity":
             return None
         else:
@@ -260,7 +262,7 @@ class AcceleratedGD(optimization_solver):
 
     def __iter_per__(self):
         lr = self.params["lr"]
-        lambda_k1 = (1 + (1 + 4 * self.lambda_k ** 2) ** (0.5)) / 2
+        lambda_k1 = (1 + (1 + 4 * self.lambda_k**2) ** (0.5)) / 2
         gamma_k = (1 - self.lambda_k) / lambda_k1
         grad = self.__first_order_oracle__(self.xk)
         if self.check_norm(grad, self.params["eps"]):
@@ -319,7 +321,7 @@ class BFGS(optimization_solver):
             return
         B = jnp.dot(jnp.expand_dims(self.Hk @ yk, 1), jnp.expand_dims(sk, 0))
         S = jnp.dot(jnp.expand_dims(sk, 1), jnp.expand_dims(sk, 0))
-        self.Hk = self.Hk + (a + self.Hk @ yk @ yk) * S / (a ** 2) - (B + B.T) / a
+        self.Hk = self.Hk + (a + self.Hk @ yk @ yk) * S / (a**2) - (B + B.T) / a
 
 
 class LimitedMemoryBFGS(optimization_solver):
@@ -452,7 +454,7 @@ class AcceleratedGDRestart(optimization_solver):
             yk1=yk1,
             theta_k=self.k / (self.k + 1),
         )
-        if (self.k + 1) ** 5 * self.Mk ** 2 * self.Sk > self.L ** 2:
+        if (self.k + 1) ** 5 * self.Mk**2 * self.Sk > self.L**2:
             self.restart_iter(
                 xk1, self.params["beta"] * self.L, grad_x0=grad_xk1, grad_y0=grad_yk1
             )
@@ -652,7 +654,7 @@ class SubspaceNewton(SubspaceGD):
     def generate_matrix(self, dim, reduced_dim, mode):
         # (dim,reduced_dim)の行列を生成
         if mode == "random":
-            return jax_randn(reduced_dim, dim, dtype=self.dtype) / (reduced_dim ** 0.5)
+            return jax_randn(reduced_dim, dim, dtype=self.dtype) / (reduced_dim**0.5)
         elif mode == "identity":
             return None
         else:
@@ -685,7 +687,7 @@ class LimitedMemoryNewton(optimization_solver):
             self.index += 2
             self.index %= matrix_size
         elif mode == RANDOM:
-            self.Pk = jax_randn(matrix_size, dim, dtype=self.dtype) / matrix_size ** 0.5
+            self.Pk = jax_randn(matrix_size, dim, dtype=self.dtype) / matrix_size**0.5
         else:
             raise ValueError(f"{mode} is not implemented.")
 
@@ -841,7 +843,7 @@ class SubspaceRNM(optimization_solver):
     def generate_matrix(self, dim, reduced_dim, mode="random"):
         # (dim,reduced_dim)の行列を生成
         if mode == "random":
-            return jax_randn(reduced_dim, dim, dtype=self.dtype) / (reduced_dim ** 0.5)
+            return jax_randn(reduced_dim, dim, dtype=self.dtype) / (reduced_dim**0.5)
 
 
 class SubspaceTRM(optimization_solver):
@@ -877,7 +879,7 @@ class SubspaceTRM(optimization_solver):
         H_sub = self.subspace_second_order_oracle(self.xk, P)
         g_sub = self.subspace_first_order_oracle(self.xk, P)
 
-        if self.check_norm(grad, self.params["eps"]):
+        if self.check_norm(g_sub, self.params["eps"]):
             self.finish = True
             return
 
@@ -917,4 +919,4 @@ class SubspaceTRM(optimization_solver):
         return stepsize
 
     def generate_matrix(self, dim, reduced_dim):
-        return jax_randn(reduced_dim, dim, dtype=self.dtype) / (reduced_dim ** 0.5)
+        return jax_randn(reduced_dim, dim, dtype=self.dtype) / (reduced_dim**0.5)
