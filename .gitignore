@@ -171,3 +171,4 @@ nogithub/
 
 .vscode
 notebooks/
+*stats/
