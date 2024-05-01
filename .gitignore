@@ -172,3 +172,4 @@ nogithub/
 .vscode
 notebooks/
 *stats/
+mlruns/
