@@ -204,18 +204,17 @@ class SubspaceGD(optimization_solver):
         self.params_key = [
             "lr",
             "reduced_dim",
-            "dim",
             "mode",
             "eps",
             "backward",
             "linesearch",
+            "random_matrix_seed",
         ]
 
     def __iter_per__(self):
         reduced_dim = self.params["reduced_dim"]
-        dim = self.params["dim"]
         mode = self.params["mode"]
-        Mk = self.generate_matrix(dim, reduced_dim, mode)
+        Mk = self.generate_matrix(self.dim, reduced_dim, mode)
         projected_grad = self.subspace_first_order_oracle(self.xk, Mk)
         if self.check_norm(projected_grad, self.params["eps"]):
             self.finish = True
@@ -237,13 +236,22 @@ class SubspaceGD(optimization_solver):
         else:
             return self.params["lr"]
 
+    def __run_init__(self, f, x0, iteration, params):
+        super().__run_init__(f, x0, iteration, params)
+        self.dim = x0.shape[0]
+        self.key = random.PRNGKey(params["random_matrix_seed"])
+
     def __direction__(self, projected_grad, Mk):
         return -projected_grad
 
     def generate_matrix(self, dim, reduced_dim, mode):
         # (dim,reduced_dim)の行列を生成
         if mode == "random":
-            return jax_randn(reduced_dim, dim, dtype=self.dtype) / (reduced_dim**0.5)
+            P = random.normal(self.key, (reduced_dim, dim)).astype(self.dtype) / (
+                reduced_dim**0.5
+            )
+            self.key = random.split(self.key)[0]
+            return P
         elif mode == "identity":
             return None
         else:

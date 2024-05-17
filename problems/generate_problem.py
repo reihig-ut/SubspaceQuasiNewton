@@ -326,7 +326,7 @@ def generate_softmax(properties):
     data_name = properties["data_name"]
     data_size = int(properties["data_size"])
     dim = int(properties["dim"])
-    if data_name == "Scotus":
+    if data_name == "scotus":
         path_dataset = os.path.join(DATAPATH, "classification", "scotus.svm")
         X, y = load_svmlight_file(path_dataset)
         X = X[:data_size, :dim]
@@ -379,7 +379,7 @@ def generate_logistic(properties):
 
     elif data_name == "webspam":
         # [350000,16609143]
-        path_dataset = os.path.join(DATAPATH, "classification", "webspam.svm")
+        path_dataset = os.path.join(DATAPATH, "classification", "webspam_wc_normalized_trigram.svm.xz")
         X, y = load_svmlight_file(path_dataset)
         X = X[:data_size, :dim]
         y = y[:data_size]

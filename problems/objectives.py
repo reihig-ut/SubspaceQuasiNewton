@@ -8,7 +8,7 @@ from jax import jit
 from jax.scipy.special import logsumexp
 from jax import random
 import utils.jax_layers as F
-from sklearn import load_svmlight_file
+from sklearn.datasets import load_svmlight_file
 
 
 class Objective:
