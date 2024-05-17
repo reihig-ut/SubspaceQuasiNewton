@@ -21,6 +21,7 @@ SPARSEGAUSSIANPROCESS = "SparseGaussianProcess"
 REGULARIZED = "Regularized"
 ROSENBROCK = "Rosenbrock"
 ROSENBROCK_RANKDEFICIENT = "RosenbrockRankDeficient"
+SVM = "SupportVectorMachine"
 
 # constraints
 POLYTOPE = "Polytope"

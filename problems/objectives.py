@@ -7,8 +7,8 @@ import jaxlib
 from jax import jit
 from jax.scipy.special import logsumexp
 from jax import random
-
 import utils.jax_layers as F
+from sklearn import load_svmlight_file
 
 
 class Objective:
@@ -254,19 +254,23 @@ class CNNet(Objective):
         return self.criterion(z, self.params[1])
 
 
-class logistic(Objective):
+class LogisticRegression(Objective):
     @partial(jit, static_argnums=0)
     def __call__(self, x):
-        # Xの最後には列には1だけのものがある
-        # yは-1,1で
-        a = self.params[0] @ x[:-1] + x[-1]
+        if self.params[2]:  # bias_flag
+            a = self.params[0] @ x[:-1] + x[-1]
+        else:
+            a = self.params[0] @ x
         return jnp.mean(jnp.log(1 + jnp.exp(-self.params[1] * a)))
 
     def get_dimension(self):
-        return self.params[0].shape[1] + 1
+        if self.params[2]:
+            return self.params[0].shape[1] + 1
+        else:
+            return self.params[0].shape[1]
 
 
-class softmax(Objective):
+class SoftmaxRegression(Objective):
     @partial(jit, static_argnums=0)
     def __call__(self, x, eps=1e-12):
         data_num, feature_num = self.params[0].shape
@@ -432,6 +436,55 @@ class RosenbrockRankDeficient(Objective):
     def __call__(self, x):
         y = self.R.T.dot(self.R.dot(x))
         return jnp.sum(100 * (y[1:] - y[:-1] ** 2) ** 2 + (1 - y[:-1]) ** 2)
+
+    def get_dimension(self):
+        return self.dim
+
+
+class SupportVectorMachine(Objective):
+    def __init__(self, params):
+        # params = ["data_name", "data_size", "dim", "loss_name", "lambda"],
+        self.params = params
+        self.dim = params[2]
+
+        self.X, self.y = load_svmlight_file(f"data/svm/{params[0]}.svm")
+        self.X = self.X[: params[1], : params[2]].toarray()
+        self.y = self.y[: params[1]]
+
+        self.loss = {
+            "squared": self.squared_loss,
+            "geman_mcclure": self.geman_mcclure_loss,
+            "cauchy": self.cauchy_loss,
+            "welsch": self.welsch_loss,
+        }[params[3]]
+
+        self.lamb = params[4]
+
+    def set_type(self, dtype):
+        self.X = self.X.astype(dtype)
+        self.y = self.y.astype(dtype)
+
+    @partial(jit, static_argnums=0)
+    def squared_loss(self, x: jnp.ndarray) -> jnp.ndarray:
+        return 0.5 * x**2
+
+    @partial(jit, static_argnums=0)
+    def geman_mcclure_loss(self, x: jnp.ndarray) -> jnp.ndarray:
+        return 2 * x**2 / (x**2 + 4)
+
+    @partial(jit, static_argnums=0)
+    def cauchy_loss(self, x: jnp.ndarray) -> jnp.ndarray:
+        return jnp.log(x**2 / 2.0 + 1)
+
+    @partial(jit, static_argnums=0)
+    def welsch_loss(self, x: jnp.ndarray) -> jnp.ndarray:
+        return 1 - jnp.exp(-0.5 * x**2)
+
+    @partial(jit, static_argnums=0)
+    def __call__(self, x):
+        return jnp.mean(
+            self.loss(self.y - jnp.dot(self.X, x))
+        ) + self.lamb * jnp.linalg.norm(x, ord=2)
 
     def get_dimension(self):
         return self.dim

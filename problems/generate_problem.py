@@ -28,12 +28,13 @@ objective_properties_key = {
     LEASTSQUARE: ["data_name", "data_size", "dim"],
     MLPNET: ["data_name", "layers_size", "activation", "criterion"],
     CNN: ["data_name", "layers_size", "activation", "criterion"],
-    SOFTMAX: ["data_name"],
-    LOGISTIC: ["data_name"],
+    SOFTMAX: ["data_name", "data_size", "dim"],
+    LOGISTIC: ["data_name", "data_size", "dim"],
     SPARSEGAUSSIANPROCESS: ["data_name", "reduced_data_size", "kernel_mode"],
     REGULARIZED: ["coeff", "ord", "Fused"],
     ROSENBROCK: ["dim"],
     ROSENBROCK_RANKDEFICIENT: ["dim", "rank", "matrix_seed"],
+    SVM: ["data_name", "data_size", "dim", "loss_name", "lambda"],
 }
 
 constraints_properties_key = {
@@ -323,42 +324,80 @@ def generate_cnn(properties):
 
 def generate_softmax(properties):
     data_name = properties["data_name"]
+    data_size = int(properties["data_size"])
+    dim = int(properties["dim"])
     if data_name == "Scotus":
-        path_dataset = os.path.join(
-            DATAPATH, "classification", "scotus_lexglue_tfidf_train.svm.bz2"
-        )
+        path_dataset = os.path.join(DATAPATH, "classification", "scotus.svm")
         X, y = load_svmlight_file(path_dataset)
+        X = X[:data_size, :dim]
+        y = y[:data_size]
         num_classes = len(jnp.unique(y))
         y = nn.one_hot(y, num_classes=num_classes)
 
     elif data_name == "news20":
-        path_dataset = os.path.join(DATAPATH, "classification", "news20.bz2")
+        path_dataset = os.path.join(DATAPATH, "classification", "news20")
         X, y = load_svmlight_file(path_dataset)
+        X = X[:data_size, :dim]
+        y = y[:data_size]
         num_classes = len(jnp.unique(y))
         y = nn.one_hot(y, num_classes=num_classes)
+
+    elif data_name == "news20_tfidf":
+        path_dataset = os.path.join(DATAPATH, "classification", "news20_tfidf.svm")
+        X, y = load_svmlight_file(path_dataset)
+        X = X[:data_size, :dim]
+        y = y[:data_size]
+        num_classes = len(jnp.unique(y))
+        y = nn.one_hot(y, num_classes=num_classes)
+
     X = BCSR.from_scipy_sparse(X)
     y = jnp.array(y)
     params = [X, y]
-    f = softmax(params)
+    f = SoftmaxRegression(params)
     return f
 
 
 def generate_logistic(properties):
     data_name = properties["data_name"]
+    data_size = int(properties["data_size"])
+    dim = int(properties["dim"])
+    bias = properties["bias"] in ["True", "true"]
+
     if data_name == "rcv1":
         # [20242,47236]
         path_dataset = os.path.join(DATAPATH, "classification", "rcv1_train.binary.bz2")
         X, y = load_svmlight_file(path_dataset)
+        X = X[:data_size, :dim]
+        y = y[:data_size]
 
     elif data_name == "news20":
         # [19996,1355191]
         path_dataset = os.path.join(DATAPATH, "classification", "news20.binary.bz2")
         X, y = load_svmlight_file(path_dataset)
+        X = X[:data_size, :dim]
+        y = y[:data_size]
+
+    elif data_name == "webspam":
+        # [350000,16609143]
+        path_dataset = os.path.join(DATAPATH, "classification", "webspam.svm")
+        X, y = load_svmlight_file(path_dataset)
+        X = X[:data_size, :dim]
+        y = y[:data_size]
+
+    elif data_name == "ad":
+        # [3279,1558]
+        path_dataset = os.path.join(DATAPATH, "classification", "ad.svm")
+        X, y = load_svmlight_file(path_dataset)
+        X = X[:data_size, :dim]
+        y = y[:data_size]
+
     X = BCSR.from_scipy_sparse(X)
     y = jnp.array(y)
 
-    params = [X, y]
-    f = logistic(params)
+    assert set(jnp.unique(y)) == {-1.0, 1.0}
+
+    params = [X, y, bias]
+    f = LogisticRegression(params)
     return f
 
 
