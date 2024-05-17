@@ -41,6 +41,8 @@ def get_solver(solver_name, dtype):
         solver = SubspaceQNM(dtype)
     elif solver_name == SUBSPACE_TRUST_REGION:
         solver = SubspaceTRM(dtype)
+    elif solver_name == HSODM:
+        solver = HSODM(dtype)
     else:
         raise ValueError(f"{solver_name} is not implemented.")
     return solver

@@ -6,6 +6,7 @@ import numpy as np
 from jax import grad, jit
 from jax.lax import transpose
 from jax.numpy import float64
+from jax import random
 
 from environments import DIRECTIONALDERIVATIVE, FINITEDIFFERENCE, LEESELECTION, RANDOM
 from utils.calculate import (
@@ -90,9 +91,9 @@ class optimization_solver:
                 return get_hessian_with_hvp(self.f, x, Mk)
         else:
             reduced_dim = Mk.shape[0]
-            d = jnp.zeros(reduced_dim, dtype=self.dtype)
-            sub_func = lambda d: self.f(x + Mk.T @ d)
-            return hessian(sub_func)(d)
+            return hessian(lambda d: self.f(x + Mk.T @ d))(
+                jnp.zeros(reduced_dim, dtype=self.dtype)
+            )
 
     def __clear__(self):
         return
@@ -800,6 +801,7 @@ class SubspaceRNM(optimization_solver):
             "beta",
             "eps",
             "backward",
+            "random_matrix_seed",
         ]
 
     def __iter_per__(self):
@@ -840,10 +842,29 @@ class SubspaceRNM(optimization_solver):
             beta=beta,
         )
 
-    def generate_matrix(self, dim, reduced_dim, mode="random"):
-        # (dim,reduced_dim)の行列を生成
-        if mode == "random":
-            return jax_randn(reduced_dim, dim, dtype=self.dtype) / (reduced_dim**0.5)
+    def __run_init__(self, f, x0, iteration, params):
+        super().__run_init__(f, x0, iteration, params)
+        self.key = random.PRNGKey(params["random_matrix_seed"])
+
+    def generate_matrix(self, dim, reduced_dim):
+        P = random.normal(self.key, (reduced_dim, dim)).astype(self.dtype) / (
+            reduced_dim**0.5
+        )
+        self.key = random.split(self.key)[0]
+        return P
+
+
+@jit
+def solve_htrs(g_sub: jnp.ndarray, H_sub: jnp.ndarray, delta: float) -> jnp.ndarray:
+    vec_min = jnp.linalg.eigh(
+        jnp.block(
+            [
+                [H_sub, g_sub.reshape(-1, 1)],
+                [g_sub.reshape(1, -1), jnp.array([[-delta]])],
+            ]
+        )
+    )[1][:, 0]
+    return vec_min
 
 
 class SubspaceTRM(optimization_solver):
@@ -858,24 +879,12 @@ class SubspaceTRM(optimization_solver):
             "beta",
             "eps",
             "backward",
+            "random_matrix_seed",
         ]
-
-    def _solve_subproblem(
-        self, g_sub: jnp.ndarray, H_sub: jnp.ndarray, delta: float, n: int
-    ) -> jnp.ndarray:
-        F = jnp.block(
-            [
-                [H_sub, g_sub.reshape(-1, 1)],
-                [g_sub.reshape(1, -1), jnp.array([[-delta]])],
-            ]
-        )
-        vec_min = jnp.linalg.eigh(F)[1][:, 0]
-        return vec_min
 
     def __iter_per__(self):
         reduced_dim = self.params["reduced_dim"]
-        dim = self.xk.shape[0]
-        P = self.generate_matrix(dim, reduced_dim)
+        P = self.generate_matrix(self.xk.shape[0], reduced_dim)
         H_sub = self.subspace_second_order_oracle(self.xk, P)
         g_sub = self.subspace_first_order_oracle(self.xk, P)
 
@@ -884,7 +893,7 @@ class SubspaceTRM(optimization_solver):
             return
 
         # solve subproblem
-        subprob_sol = self._solve_subproblem(g_sub, H_sub, self.params["delta"], dim)
+        subprob_sol = solve_htrs(g_sub, H_sub, self.params["delta"])
         v_sub = subprob_sol[:-1]
         t = subprob_sol[-1]
 
@@ -918,5 +927,68 @@ class SubspaceTRM(optimization_solver):
                 return 0
         return stepsize
 
+    def __run_init__(self, f, x0, iteration, params):
+        super().__run_init__(f, x0, iteration, params)
+        self.key = random.PRNGKey(params["random_matrix_seed"])
+
     def generate_matrix(self, dim, reduced_dim):
-        return jax_randn(reduced_dim, dim, dtype=self.dtype) / (reduced_dim**0.5)
+        P = random.normal(self.key, (reduced_dim, dim)).astype(self.dtype) / (
+            reduced_dim**0.5
+        )
+        self.key = random.split(self.key)[0]
+        return P
+
+
+class HSODM(optimization_solver):
+    def __init__(self, dtype=jnp.float64) -> None:
+        super().__init__(dtype)
+        self.params_key = [
+            "delta",
+            "Delta",
+            "nu",
+            "alpha",
+            "beta",
+            "eps",
+            "backward",
+        ]
+
+    def __iter_per__(self):
+        g = self.__first_order_oracle__(self.xk)
+        H = self.__second_order_oracle__(self.xk)
+
+        if self.check_norm(g, self.params["eps"]):
+            self.finish = True
+            return
+
+        # solve subproblem
+        subprob_sol = solve_htrs(g, H, self.params["delta"])
+        v = subprob_sol[:-1]
+        t = subprob_sol[-1]
+
+        # compute direction
+        if abs(t) >= self.params["nu"]:
+            d = v / t
+        else:
+            sign = 1 if -jnp.dot(g, v) > 0 else -1
+            d = sign * v
+
+        # update
+        norm_d = jnp.linalg.norm(d)
+        if norm_d > self.params["Delta"]:
+            eta = self.__step_size__(g, d)
+            self.__update__(eta * d)
+        else:
+            self.__update__(d)
+
+    def __step_size__(self, g, d):
+        alpha = self.params["alpha"]
+        beta = self.params["beta"]
+
+        # line search
+        f_k = self.f(self.xk)
+        stepsize = 1.0
+        while f_k - self.f(self.xk + stepsize * d) < -alpha * stepsize * g @ d:
+            stepsize *= beta
+            if stepsize < 1e-12:
+                return 0
+        return stepsize

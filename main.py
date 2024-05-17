@@ -3,7 +3,7 @@ import sys
 
 import numpy as np
 
-from environments import *
+from environments import DTYPE, NOCONSTRAINTS, RESULTPATH
 from numerical_experiment import get_objects_from_config
 from utils.logger import logger
 from utils.save_func import (
@@ -13,8 +13,10 @@ from utils.save_func import (
     save_result_json,
 )
 
-PROXIMAL_METHODS = [PROXIMAL_GRADIENT_DESCENT, ACCELERATED_PROXIMAL_GRADIENT_DESCENT]
-QUASI_NEWTONS = [BFGS_QUASI_NEWTON, RANDOM_BFGS, SUBSPACE_QUASI_NEWTON]
+# PROXIMAL_METHODS = [PROXIMAL_GRADIENT_DESCENT, ACCELERATED_PROXIMAL_GRADIENT_DESCENT]
+# QUASI_NEWTONS = [BFGS_QUASI_NEWTON, RANDOM_BFGS, SUBSPACE_QUASI_NEWTON]
+PROXIMAL_METHODS = []
+QUASI_NEWTONS = []
 
 
 def run_numerical_experiment(config):

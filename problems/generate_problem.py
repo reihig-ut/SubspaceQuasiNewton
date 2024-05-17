@@ -32,6 +32,8 @@ objective_properties_key = {
     LOGISTIC: ["data_name"],
     SPARSEGAUSSIANPROCESS: ["data_name", "reduced_data_size", "kernel_mode"],
     REGULARIZED: ["coeff", "ord", "Fused"],
+    ROSENBROCK: ["dim"],
+    ROSENBROCK_RANKDEFICIENT: ["dim", "rank", "matrix_seed"],
 }
 
 constraints_properties_key = {
@@ -68,6 +70,10 @@ def generate_objective(function_name, function_properties):
         f = generate_logistic(function_properties)
     elif function_name == SPARSEGAUSSIANPROCESS:
         f = generate_sparse_gaussian_process(function_properties)
+    elif function_name == ROSENBROCK:
+        f = generate_rosenbrock(function_properties)
+    elif function_name == ROSENBROCK_RANKDEFICIENT:
+        f = generate_rosenbrock_rankdeficient(function_properties)
     else:
         raise ValueError(f"{function_name} is not implemented.")
 
@@ -114,6 +120,8 @@ def generate_constraints(constraints_name, constraints_properties):
 
 def generate_initial_points(func, function_name, constraints_name, function_properties):
     dim = func.get_dimension()
+    # init_param = function_properties["init_param"]
+    # param_sigma = function_properties["param_sigma"]
     function_name = function_name.replace(REGULARIZED, "")
     # 非負制約の時のみすべて1
     if constraints_name == NONNEGATIVE:
@@ -123,8 +131,11 @@ def generate_initial_points(func, function_name, constraints_name, function_prop
     if function_name == MLPNET:
         if function_properties["data_name"] == "mnist":
             x0 = jnp.load(
-                os.path.join(DATAPATH, "mnist", "mlpnet", f"init_param_{dim}.npy")
+                os.path.join(
+                    DATAPATH, "mnist", "mlpnet", f"{init_param}_param_{dim}.npy"
+                )
             )
+            x0 += jax_randn(dim) * param_sigma
             return x0
 
     if function_name == CNN:
@@ -138,6 +149,8 @@ def generate_initial_points(func, function_name, constraints_name, function_prop
     ):
         x0 = jnp.ones(dim)
         return x0
+    if function_name == ROSENBROCK or function_name == ROSENBROCK_RANKDEFICIENT:
+        return jnp.ones(dim) / 2
 
     x0 = jnp.zeros(dim)
     return x0
@@ -365,6 +378,18 @@ def generate_sparse_gaussian_process(properties):
         data_dim = 10000
     params = [X, y, data_dim, reduced_data_size, kernel_mode]
     f = SparseGaussianProcess(params)
+    return f
+
+
+def generate_rosenbrock(properties):
+    params = [properties["dim"]]
+    f = Rosenbrock(params)
+    return f
+
+
+def generate_rosenbrock_rankdeficient(properties):
+    params = [properties["dim"], properties["rank"], properties["matrix_seed"]]
+    f = RosenbrockRankDeficient(params)
     return f
 
 

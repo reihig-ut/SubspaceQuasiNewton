@@ -7,6 +7,7 @@ from problems.generate_problem import (
     constraints_properties_key,
     objective_properties_key,
 )
+from collections import OrderedDict
 from utils.save_func import get_params_from_path, get_path_form_params
 from widgets.option import open_option_window
 from widgets.path_func import get_best_result_path, show_result_with_option
@@ -41,7 +42,7 @@ class select_objective_box:
         names = self.get_objective_names()
         self.cmbbox = ttk.Combobox(self.frame, values=names, state="readonly")
         self.selected_objective = None
-        self.params_box = {}
+        self.params_box = OrderedDict()
         self.cmbbox.bind(" <<ComboboxSelected>> ", self.get_properties_of_objective)
 
     def get_objective_names(self):
@@ -54,7 +55,7 @@ class select_objective_box:
     def get_properties_of_objective(self, event):
         self.selected_objective = self.cmbbox.get()
         dirs = os.listdir(os.path.join(RESULTPATH, self.selected_objective))
-        values_dict = {}
+        values_dict = OrderedDict()
 
         for dir_name in dirs:
             params_dict = get_params_from_path(dir_name)
@@ -68,14 +69,14 @@ class select_objective_box:
         for param in self.params_box.keys():
             self.params_box[param].destroy()
 
-        self.params_box = {}
+        self.params_box = OrderedDict()
         for param, values in values_dict.items():
             cmbbox = Labeled_cmbbox(self.frame, text=param, values=list(values))
             cmbbox.pack()
             self.params_box[param] = cmbbox
 
     def get_values_of_params(self):
-        params_dict = {}
+        params_dict = OrderedDict()
         for param, cmbbox in self.params_box.items():
             params_dict[param] = cmbbox.get_value_of_param()
 

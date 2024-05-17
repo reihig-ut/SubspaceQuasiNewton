@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from environments import DISTINCT_PARAM_VALUE, DISTINCT_PARAMS
+from collections import OrderedDict
 
 
 def get_path_form_params(params: dict):
@@ -18,7 +19,7 @@ def get_path_form_params(params: dict):
 
 def get_params_from_path(save_dir_name):
     params = save_dir_name.split(DISTINCT_PARAMS)
-    params_dict = {}
+    params_dict = OrderedDict()
     for param in params:
         param_name, param_value = param.split(DISTINCT_PARAM_VALUE)
         params_dict[param_name] = param_value

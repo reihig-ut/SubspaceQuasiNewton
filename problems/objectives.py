@@ -6,6 +6,7 @@ import jax.numpy as jnp
 import jaxlib
 from jax import jit
 from jax.scipy.special import logsumexp
+from jax import random
 
 import utils.jax_layers as F
 
@@ -291,8 +292,8 @@ class SparseGaussianProcess(Objective):
             sigma = theta[0]
             length = theta[1]
             A = jnp.expand_dims(x1, 1) - jnp.expand_dims(x2, 0)
-            return (sigma ** 2) * jnp.exp(
-                -jnp.linalg.norm(A, axis=2) ** 2 / (2 * length ** 2)
+            return (sigma**2) * jnp.exp(
+                -jnp.linalg.norm(A, axis=2) ** 2 / (2 * length**2)
             )
 
     def trace_diag_kernel_func(self, x1, x2, theta):
@@ -301,8 +302,8 @@ class SparseGaussianProcess(Objective):
             sigma = theta[0]
             length = theta[1]
             return jnp.sum(
-                (sigma ** 2)
-                * jnp.exp(-jnp.linalg.norm(x1 - x2, axis=1) / (2 * length ** 2))
+                (sigma**2)
+                * jnp.exp(-jnp.linalg.norm(x1 - x2, axis=1) / (2 * length**2))
             )
 
     def get_dimension(self):
@@ -325,20 +326,20 @@ class SparseGaussianProcess(Objective):
         Kmm_inv = jnp.linalg.inv(Kmm)
         # |sigma^2 I_n + Knm@Kmm_inv@Knm.T| = sigma^{2n} |I_n + 1/sigma^2 * Knm@Kmm_inv@Knm.T| = sigma^{2n} |I_m + 1/sigma^2  Knm.T@Knm@Kmm_inv| = sigam^{2(n-m)}|sigma^2 I_m +Knm.T@Knm@Kmm_inv|
         determinant = jnp.linalg.det(
-            sigma ** 2 * jnp.eye(reduced_points_num, dtype=x.dtype)
+            sigma**2 * jnp.eye(reduced_points_num, dtype=x.dtype)
             + Knm.T @ Knm @ Kmm_inv
         )
         # (sigma^2 I_n + Knm@Kmm_inv@Knm.T)^{-1} = 1/sigma^2 (I_n + 1/sigma^2 Knm@Kmm_inv@Knm.T)^{-1} = 1/sigma^2 (I_n - Knm@Kmm_inv@(simga^2I_m +  Knm.T@Knm@Kmm_inv)^{-1}@Knm.T)
         ym = self.params[1] @ Knm
         quad = (
             1
-            / (sigma ** 2)
+            / (sigma**2)
             * (
                 jnp.linalg.norm(self.params[1]) ** 2
                 + ym
                 @ Kmm_inv
                 @ jnp.linalg.inv(
-                    sigma ** 2 * jnp.eye(reduced_points_num, dtype=x.dtype)
+                    sigma**2 * jnp.eye(reduced_points_num, dtype=x.dtype)
                     + Kmnnm @ Kmm_inv
                 )
                 @ ym
@@ -349,7 +350,7 @@ class SparseGaussianProcess(Objective):
             - 0.5 * jnp.log(determinant)
             - 0.5 * quad
             - 0.5
-            / sigma ** 2
+            / sigma**2
             * (
                 self.trace_diag_kernel_func(
                     self.params[0],
@@ -401,3 +402,36 @@ class regularzed_wrapper(Objective):
 # class Schwefel(Objective):
 #   def __call__(self,x):
 #     return - torch.sum(x*torch.sin(torch.sqrt(torch.abs(x))))
+
+
+class Rosenbrock(Objective):
+    def __init__(self, params):
+        self.params = params
+        self.dim = params[0]
+
+    @partial(jit, static_argnums=0)
+    def __call__(self, x):
+        return jnp.sum(100 * (x[1:] - x[:-1] ** 2) ** 2 + (1 - x[:-1]) ** 2)
+
+    def get_dimension(self):
+        return self.params[0]
+
+
+class RosenbrockRankDeficient(Objective):
+    def __init__(self, params):
+        self.params = params
+        self.dim = params[0]
+        self.rank = params[1]
+        self.key = random.key(self.params[2])
+        self.R = random.normal(self.key, (self.rank, self.dim))
+
+    def set_type(self, dtype):
+        self.R = self.R.astype(dtype)
+
+    @partial(jit, static_argnums=0)
+    def __call__(self, x):
+        y = self.R.T.dot(self.R.dot(x))
+        return jnp.sum(100 * (y[1:] - y[:-1] ** 2) ** 2 + (1 - y[:-1]) ** 2)
+
+    def get_dimension(self):
+        return self.dim

@@ -1,7 +1,4 @@
-import time
-
 import jax.numpy as jnp
-import numpy as np
 
 from algorithms.descent_method import optimization_solver
 from utils.calculate import clipping_eigenvalues, jax_randn, subspace_line_search
@@ -82,7 +79,7 @@ class SubspaceQNM(optimization_solver):
     def generate_matrix(self, dim, reduced_dim, mode):
         # (dim,reduced_dim)の行列を生成
         if mode == "random":
-            return jax_randn(reduced_dim, dim, dtype=self.dtype) / (reduced_dim ** 0.5)
+            return jax_randn(reduced_dim, dim, dtype=self.dtype) / (reduced_dim**0.5)
         elif mode == "identity":
             return None
         else:
@@ -95,7 +92,7 @@ class SubspaceQNM(optimization_solver):
             return
         B = jnp.dot(jnp.expand_dims(self.Hk @ yk, 1), jnp.expand_dims(sk, 0))
         S = jnp.dot(jnp.expand_dims(sk, 1), jnp.expand_dims(sk, 0))
-        self.Hk = self.Hk + (a + self.Hk @ yk @ yk) * S / (a ** 2) - (B + B.T) / a
+        self.Hk = self.Hk + (a + self.Hk @ yk @ yk) * S / (a**2) - (B + B.T) / a
 
     def update_Pk(self, matrix_size, random_projected_grad, Qk, mode="Identity"):
         dim = Qk.shape[1]
@@ -116,7 +113,7 @@ class SubspaceQNM(optimization_solver):
             if mode == "Identity":
                 self.Pk = jnp.eye(matrix_size, dim, dtype=self.dtype)
             elif mode == "random":
-                self.Pk = jax_randn(matrix_size, dim, dtype=self.dtype) / (dim ** 0.5)
+                self.Pk = jax_randn(matrix_size, dim, dtype=self.dtype) / (dim**0.5)
             self.Pk = self.Pk.at[matrix_size - 2].set(vector1)
             self.Pk = self.Pk.at[matrix_size - 1].set(vector2)
 

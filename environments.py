@@ -19,6 +19,8 @@ SOFTMAX = "Softmax"
 LOGISTIC = "Logistic"
 SPARSEGAUSSIANPROCESS = "SparseGaussianProcess"
 REGULARIZED = "Regularized"
+ROSENBROCK = "Rosenbrock"
+ROSENBROCK_RANKDEFICIENT = "RosenbrockRankDeficient"
 
 # constraints
 POLYTOPE = "Polytope"
@@ -47,6 +49,7 @@ GRADIENT_PROJECTION = "GPD"
 DYNAMIC_BARRIER = "Dynamic"
 PRIMALDUAL = "PrimalDual"
 SUBSPACE_TRUST_REGION = "RSTRM"
+HSODM = "HSODM"
 
 
 # ディレクトリ名の形式

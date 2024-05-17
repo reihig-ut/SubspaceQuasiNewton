@@ -1,24 +1,24 @@
 from environments import *
 from utils.save_func import save_config
 
-save_path = "configs/config.json"
+save_path = "configs/config_mlpnet_subspaceRNM.json"
 
 # select objective function name, constraints name and algorithm name.
 # please refer to environment.py for the specific variable names.
-objective_name = QUADRATIC
+objective_name = MLPNET
 constraints_name = NOCONSTRAINTS
-solver_name = GRADIENT_DESCENT
+solver_name = SUBSPACE_REGULARIZED_NEWTON
 
 # The relevant parameters differ depending on the problem and method.
 # parameters of optimization problem
 dim: int = 1000
 constraints_num: int = 0
 convex: bool = False
-data_name: str = "random"
+data_name: str = "mnist"
 rank: int = 0
 threshold1: int = 0
 threshold2: int = 0
-activation: str = "relu"
+activation: str = "sigmoid"
 criterion: str = "CrossEntropy"
 
 layers_size: list = [(1, 16, 5, 1), (16, 32, 5, 1)]
@@ -45,6 +45,9 @@ restart = True
 mu = 1.5
 eps_feas = 1e-4
 lr = 0.1
+gamma = 0.5
+c1 = 2
+c2 = 1
 
 if __name__ == "__main__":
     config = {
